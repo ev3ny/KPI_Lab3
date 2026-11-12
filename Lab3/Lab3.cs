@@ -24,8 +24,8 @@ namespace Lab3
         [TearDown]
         public void TearDown()
         {
-                driver.Quit();
-                driver.Dispose();
+            driver.Quit();
+            driver.Dispose();
         }
 
         [Test]
@@ -41,7 +41,7 @@ namespace Lab3
             boxes[0].Click();
             boxes[1].Click();
 
-            Thread.Sleep(1000);
+            wait.Until(d => boxes[0].Selected == true && boxes[1].Selected == false);
 
             Assert.That(boxes[0].Selected, Is.True);
             Assert.That(boxes[1].Selected, Is.False);
@@ -58,12 +58,16 @@ namespace Lab3
                 addButton.Click();
             }
 
-            Thread.Sleep(1000);
+            var deleteButtons = wait.Until(d =>
+            {
+                var btns = d.FindElements(By.CssSelector(".added-manually"));
+                return btns.Count == 3 ? btns : null;
+            });
 
-            var deleteButtons = driver.FindElements(By.CssSelector(".added-manually"));
             Assert.That(deleteButtons.Count, Is.EqualTo(3));
 
             deleteButtons[0].Click();
+
             Assert.That(driver.FindElements(By.CssSelector(".added-manually")).Count, Is.EqualTo(2));
 
             foreach (var b in driver.FindElements(By.CssSelector(".added-manually")).ToList())
@@ -86,9 +90,10 @@ namespace Lab3
             select.SelectByText("Option 1");
             Assert.That(select.SelectedOption.Text, Is.EqualTo("Option 1"));
 
-            Thread.Sleep(1000);
-
             select.SelectByValue("2");
+
+            wait.Until(d => select.SelectedOption.Text == "Option 2");
+
             Assert.That(select.SelectedOption.Text, Is.EqualTo("Option 2"));
         }
 
@@ -101,9 +106,10 @@ namespace Lab3
             input.SendKeys("123");
             Assert.That(input.GetAttribute("value"), Is.EqualTo("123"));
 
-            Thread.Sleep(1000);
-
             input.SendKeys(Keys.ArrowUp);
+
+            wait.Until(d => input.GetAttribute("value") == "124");
+
             Assert.That(input.GetAttribute("value"), Is.EqualTo("124"));
 
             input.SendKeys(Keys.ArrowDown);
@@ -127,8 +133,6 @@ namespace Lab3
             Assert.That(driver.Url, Does.Contain($"/status_codes/{code}"));
             var text = driver.FindElement(By.CssSelector(".example p")).Text;
             Assert.That(text, Does.Contain($"This page returned a {code} status code"));
-
-            Thread.Sleep(1000);
 
             driver.FindElement(By.LinkText("here")).Click();
             Assert.That(driver.Url, Does.EndWith("/status_codes"));
@@ -182,8 +186,6 @@ namespace Lab3
             driver.FindElement(By.Id("password")).SendKeys("123");
             driver.FindElement(By.CssSelector("button[type='submit']")).Click();
 
-            Thread.Sleep(1000);
-
             Assert.That(driver.FindElement(By.Id("flash")).Text, Does.Contain("Your username is invalid!"));
             Assert.That(driver.Url, Does.Contain("/login"));
         }
@@ -227,7 +229,7 @@ namespace Lab3
                 counts.Add(items.Count);
                 driver.Navigate().Refresh();
             }
-            TestContext.Out.WriteLine("Observed menu item counts:: " + string.Join(", ", counts));
+            TestContext.Out.WriteLine("Observed menu item counts: " + string.Join(", ", counts));
         }
 
 
